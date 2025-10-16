@@ -2,7 +2,7 @@
 
 import hashlib
 import secrets
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pond.infrastructure.database import DatabasePool
 
@@ -46,7 +46,7 @@ class APIKeyManager:
                 """,
                 key_hash,
                 description
-                or f"API key created at {datetime.now(datetime.UTC).isoformat()}",
+                or f"API key created at {datetime.now(UTC).isoformat()}",
             )
 
         return api_key

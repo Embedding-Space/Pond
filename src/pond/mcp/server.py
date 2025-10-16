@@ -37,7 +37,7 @@ jinja_env = Environment(
     loader=FileSystemLoader(template_dir),
     trim_blocks=True,
     lstrip_blocks=True,
-    autoescape=False,  # MCP tools return plain text, not HTML
+    autoescape=False,  # MCP tools return plain text, not HTML  # noqa: S701
 )
 
 # Initialize TimeService
@@ -98,13 +98,13 @@ async def make_request(method: str, endpoint: str, json: dict | None = None) -> 
 
 def render_template(template_name: str, data: dict[str, Any]) -> str:
     """Render a Jinja2 template with the given data.
-    
+
     Always injects current_time into the context if not already present.
     """
     # Add current time if not already in data
     if "current_time" not in data:
         data["current_time"] = time_service.now().isoformat()
-    
+
     template = jinja_env.get_template(template_name)
     return template.render(**data)
 

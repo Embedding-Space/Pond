@@ -2,7 +2,8 @@
 
 import pendulum
 import structlog
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
+from pydantic import BaseModel
 
 from pond.api.dependencies import get_repository
 from pond.api.models import (
@@ -336,9 +337,10 @@ async def initialize_context(
 
     except Exception as e:
         # Unexpected errors
+        tenant_name = tenant if 'tenant' in locals() else 'unknown'
         logger.exception(
             "init_error",
-            tenant=tenant,
+            tenant=tenant_name,
             error=str(e),
         )
         raise HTTPException(
@@ -347,24 +349,22 @@ async def initialize_context(
         ) from e
 
 
-from pydantic import BaseModel
-
 class VectorsRequest(BaseModel):
     """Request for fetching vectors."""
-    limit: int = 2000
+    limit: int = 6000
 
 @router.post("/vectors")
 async def get_vectors(
-    body: VectorsRequest = Body(...),
-    request: Request = None,
+    request: Request,
+    body: VectorsRequest = Body(...),  # noqa: B008
 ) -> dict:
     """Get memories with embeddings for 3D visualization.
-    
+
     Returns the most recent memories with their 768-dimensional embeddings
     for use in THE VISUALIZER. The tenant is determined by the API key.
     """
     repository: MemoryRepository = request.app.state.memory_repository
-    
+
     # Get tenant from the authenticated API key - this was set by AuthenticationMiddleware
     tenant = request.state.tenant
     if not tenant:
@@ -372,21 +372,21 @@ async def get_vectors(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="No authenticated tenant",
         )
-    
+
     try:
         logger.info(
             "fetching_vectors",
             tenant=tenant,
             limit=body.limit,
         )
-        
+
         # Get recent memories with embeddings
         memories = await repository.get_recent(
             tenant=tenant,
             since=pendulum.now("UTC").subtract(years=1),  # Last year of memories
             limit=body.limit,
         )
-        
+
         # Filter to only memories with embeddings and format for visualization
         vectors = []
         for memory in memories:
@@ -397,15 +397,15 @@ async def get_vectors(
                     "embedding": memory.embedding.tolist(),
                     "created_at": memory.metadata.get("created_at"),
                 })
-        
+
         logger.info(
             "vectors_fetched",
             tenant=tenant,
             count=len(vectors),
         )
-        
+
         return {"memories": vectors}
-        
+
     except Exception as e:
         logger.exception(
             "vectors_error",

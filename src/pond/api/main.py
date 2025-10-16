@@ -144,7 +144,7 @@ visualizer_dist = Path(__file__).parent.parent.parent.parent / "web" / "dist"
 if visualizer_dist.exists():
     # Serve static files for assets
     app.mount("/assets", StaticFiles(directory=visualizer_dist / "assets"), name="assets")
-    
+
     # Serve index.html at root
     @app.get("/", include_in_schema=False)
     async def serve_visualizer():

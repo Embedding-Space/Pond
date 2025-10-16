@@ -95,7 +95,7 @@ class TimeService:
 
     def format_age(self, dt: datetime | DateTime) -> str:
         """Format as relative time with intuitive day references.
-        
+
         Returns different formats based on when the event occurred:
         - Today: "N minutes/hours ago"
         - Yesterday: "yesterday, N hours ago"
@@ -104,25 +104,25 @@ class TimeService:
         """
         if not isinstance(dt, DateTime):
             dt = pendulum.instance(dt)
-        
+
         # Work in local timezone for calendar comparisons
         dt_local = dt.in_timezone(self.timezone)
         now_local = pendulum.now(self.timezone)
-        
+
         # Future times
         if dt_local > now_local:
             return dt.diff_for_humans()
-        
+
         # Calculate various differences
         diff = now_local.diff(dt_local)
         total_hours = diff.total_seconds() / 3600
         total_minutes = diff.total_seconds() / 60
-        
+
         # Get calendar boundaries
         today_start = now_local.start_of('day')
         yesterday_start = today_start.subtract(days=1)
         this_week_start = now_local.start_of('week')  # Sunday at midnight
-        
+
         # Today (since midnight)
         if dt_local >= today_start:
             if total_minutes < 1:
@@ -133,25 +133,25 @@ class TimeService:
             else:
                 hours = int(total_hours)
                 return f"{hours} hour{'s' if hours != 1 else ''} ago"
-        
+
         # Yesterday (between last midnight and the midnight before)
         elif dt_local >= yesterday_start:
             hours = int(total_hours)
             return f"yesterday, {hours} hour{'s' if hours != 1 else ''} ago"
-        
+
         # This week (since Sunday midnight)
         elif dt_local >= this_week_start:
             day_name = dt_local.format('dddd')
             # Calculate days more accurately - from start of that day to now
             days_since = (now_local.date() - dt_local.date()).days
             return f"{day_name}, {days_since} day{'s' if days_since != 1 else ''} ago"
-        
+
         # Older than this week
         else:
             weeks = diff.days // 7
             months = diff.months
             years = diff.years
-            
+
             if years > 0:
                 return f"{years} year{'s' if years != 1 else ''} ago"
             elif months >= 2:  # Cutoff at 2 months (8 weeks)
@@ -196,12 +196,12 @@ class TimeService:
         """Get day label: 'Today', 'Yesterday', or day name (e.g., 'Tuesday')."""
         if not isinstance(dt, DateTime):
             dt = pendulum.instance(dt)
-        
+
         # Convert to local timezone for comparison
         dt_local = dt.in_timezone(self.timezone)
         today = pendulum.now(self.timezone).date()
         dt_date = dt_local.date()
-        
+
         if dt_date == today:
             return "Today"
         elif dt_date == today.subtract(days=1):
@@ -209,12 +209,12 @@ class TimeService:
         else:
             # Return the day name (Monday, Tuesday, etc.)
             return dt_local.format("dddd")
-    
+
     def get_date_key(self, dt: datetime | DateTime) -> str:
         """Get date key for grouping (YYYY-MM-DD format)."""
         if not isinstance(dt, DateTime):
             dt = pendulum.instance(dt)
-        
+
         # Convert to local timezone for consistent grouping
         dt_local = dt.in_timezone(self.timezone)
         return dt_local.format("YYYY-MM-DD")
