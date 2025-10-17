@@ -1,0 +1,15 @@
+**Current Time:** {{ current_time | format_datetime }}
+
+# System Health
+- **Status:** {{ system.status }}
+- **Database:** {{ system.database }}
+- **Embeddings:** {{ system.embeddings }}
+- **Version:** {{ system.version }}
+
+# Tenant Health ({{ tenant.tenant }})
+- **Status:** {{ tenant.status }}
+- **Memory Count:** {{ tenant.memory_count }}
+- **Embedding Count:** {{ tenant.embedding_count }}
+- **Date Range:** {{ tenant.oldest_memory | format_datetime }} to {{ tenant.newest_memory | format_datetime }}
+- **Embedding Provider:** {{ tenant.embedding_provider }}
+- **Embedding Healthy:** {{ 'Yes' if tenant.embedding_healthy else 'No' }}

@@ -1,0 +1,9 @@
+**Current Time:** {{ current_time | format_datetime }}
+
+{% for memory in memories %}
+
+{{ memory.created_at | format_age }}
+{{ memory.content }}
+
+---
+{% endfor %}

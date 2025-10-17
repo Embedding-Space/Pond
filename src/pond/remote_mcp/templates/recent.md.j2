@@ -1,0 +1,20 @@
+**Current Time:** {{ current_time | format_datetime }}
+
+# Recent Memories
+{% if memories %}
+{% set ns = namespace(current_date_key='', first_in_group=true) %}
+{% for memory in memories %}
+{% set date_key = memory.created_at | get_date_key %}
+{% if date_key != ns.current_date_key %}
+{% set ns.current_date_key = date_key %}
+
+## {{ memory.created_at | get_day_label }}
+{% endif %}
+
+{{ memory.created_at | format_datetime }} ({{ memory.created_at | format_age }})
+{{ memory.content }}
+{% endfor %}
+{% else %}
+
+No memories found in the requested time window.
+{% endif %}

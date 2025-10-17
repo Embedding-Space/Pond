@@ -1,0 +1,9 @@
+**Current Time:** {{ current_time | format_datetime }}
+
+{% if splash %}
+{% for memory in splash %}
+{{ memory.created_at | format_datetime }} ({{ memory.created_at | format_age }})
+{{ memory.content }}
+
+{% endfor %}
+{% endif %}

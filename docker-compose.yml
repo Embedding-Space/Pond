@@ -63,6 +63,25 @@ services:
       - pond-network
     command: ["python", "-m", "pond"]
 
+  mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    container_name: pond-mcp
+    ports:
+      - "${MCP_PORT:-8080}:8080"
+    environment:
+      - POND_URL=http://pond:8000
+      - POND_API_KEY=${POND_API_KEY}
+      - HTTP_HOST=0.0.0.0
+      - HTTP_PORT=8080
+      - HTTP_PATH=/mcp
+    depends_on:
+      - pond
+    restart: unless-stopped
+    networks:
+      - pond-network
+
 volumes:
   postgres_data:
 
