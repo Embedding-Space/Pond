@@ -1,10 +1,71 @@
 services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: pond-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-pond}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - pond-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backup:
+    image: postgres:17-alpine
+    container_name: pond-backup
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      B2_APPLICATION_KEY_ID: ${B2_APPLICATION_KEY_ID}
+      B2_APPLICATION_KEY: ${B2_APPLICATION_KEY}
+      B2_BUCKET_NAME: ${B2_BUCKET_NAME}
+    volumes:
+      - ./scripts/backup.sh:/backup.sh:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/backup.sh"]
+    restart: unless-stopped
+    networks:
+      - pond-network
+
   pond:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: pond-api
     ports:
-      - "${POND_PORT:-${PORT:-19100}}:${CONTAINER_PORT:-8000}"
-    restart: "no"  # During development, we want to see crashes immediately
+      - "${POND_PORT:-8000}:8000"
+    environment:
+      - PORT=8000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pond}
+      - OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-ollama}
+      - OLLAMA_EMBEDDING_MODEL=${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - POND_API_KEY=${POND_API_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - pond-network
     command: ["python", "-m", "pond"]
+
+volumes:
+  postgres_data:
+
+networks:
+  pond-network:
+    driver: bridge
