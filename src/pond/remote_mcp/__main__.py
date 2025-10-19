@@ -17,5 +17,5 @@ if __name__ == "__main__":
         transport="http",
         host=config.http_host,
         port=config.http_port,
-        path=config.http_path,
+        # path=config.http_path,
     )
