@@ -86,9 +86,9 @@ async def make_request(method: str, endpoint: str, json: dict | None = None) -> 
 
     async with httpx.AsyncClient() as client:
         if method == "GET":
-            response = await client.get(url, headers=headers)
+            response = await client.get(url, headers=headers, timeout=60.0)
         elif method == "POST":
-            response = await client.post(url, headers=headers, json=json or {})
+            response = await client.post(url, headers=headers, json=json or {}, timeout=60.0)
         else:
             raise ValueError(f"Unsupported method: {method}")
 
