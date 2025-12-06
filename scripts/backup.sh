@@ -15,7 +15,7 @@ fi
 
 # Authorize with B2
 echo "Authorizing with B2..."
-b2 authorize-account "$B2_APPLICATION_KEY_ID" "$B2_APPLICATION_KEY"
+b2 account authorize "$B2_APPLICATION_KEY_ID" "$B2_APPLICATION_KEY"
 
 echo "Backup service initialized. Starting hourly backup loop..."
 
@@ -41,7 +41,7 @@ while true; do
         echo "Database dump completed: $(du -h "$backup_file" | cut -f1)"
 
         # Upload to B2
-        if b2 upload-file "$B2_BUCKET_NAME" "$backup_file" "$remote_path"; then
+        if b2 file upload "$B2_BUCKET_NAME" "$backup_file" "$remote_path"; then
             echo "Uploaded to B2: $remote_path"
 
             # Remove local file
@@ -50,16 +50,14 @@ while true; do
 
             # Clean up old backups (keep last 72)
             echo "Cleaning up old backups..."
-            b2 ls --recursive "$B2_BUCKET_NAME" backups/ | \
+            b2 ls "b2://$B2_BUCKET_NAME/backups/" | \
                 grep -E 'pond-[0-9]{8}-[0-9]{6}\.sql$' | \
                 sort | \
                 head -n -72 | \
-                while read -r line; do
-                    # Extract filename from b2 ls output
-                    filename=$(echo "$line" | awk '{print $NF}')
+                while read -r filename; do
                     if [ -n "$filename" ]; then
                         echo "Deleting old backup: $filename"
-                        b2 delete-file-version "$B2_BUCKET_NAME" "$filename" || true
+                        b2 rm "b2://$B2_BUCKET_NAME/backups/$filename" || true
                     fi
                 done
 
