@@ -51,13 +51,13 @@ while true; do
             # Clean up old backups (keep last 72)
             echo "Cleaning up old backups..."
             b2 ls "b2://$B2_BUCKET_NAME/backups/" | \
-                grep -E 'pond-[0-9]{8}-[0-9]{6}\.sql$' | \
+                grep -E 'backups/pond-[0-9]{8}-[0-9]{6}\.sql$' | \
                 sort | \
                 head -n -72 | \
-                while read -r filename; do
-                    if [ -n "$filename" ]; then
-                        echo "Deleting old backup: $filename"
-                        b2 rm "b2://$B2_BUCKET_NAME/backups/$filename" || true
+                while read -r filepath; do
+                    if [ -n "$filepath" ]; then
+                        echo "Deleting old backup: $filepath"
+                        b2 rm "b2://$B2_BUCKET_NAME/$filepath" || true
                     fi
                 done
 
