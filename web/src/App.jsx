@@ -286,7 +286,7 @@ export default function App() {
           'Content-Type': 'application/json',
           'X-API-Key': apiKey,
         },
-        body: JSON.stringify({ limit: 6000 }),
+        body: JSON.stringify({ limit: 12000 }),
       })
 
       if (response.ok) {
